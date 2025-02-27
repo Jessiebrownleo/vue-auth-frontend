@@ -108,7 +108,7 @@ async function handleLogin() {
     await authStore.login(email.value, password.value, rememberMe.value);
     console.log('Login successful!');
     form.value!.message = 'Logged in successfully!';
-    setTimeout(() => router.push('/'), 1500);
+     router.push('/');
   } catch (error: any) {
     console.error('Login failed:', error);
     form.value!.error = error.response?.data?.message || 'Login failed';
