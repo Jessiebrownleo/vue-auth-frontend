@@ -105,13 +105,19 @@ async function handleLogin() {
 
   try {
     console.log('Starting login process...');
-    await authStore.login(email.value, password.value, rememberMe.value);
-    console.log('Login successful!');
-    form.value!.message = 'Logged in successfully!';
-     router.push('/');
+    const result = await authStore.login(email.value, password.value, rememberMe.value);
+
+    if (result.success) {
+      console.log('Login successful!');
+      form.value!.message = 'Logged in successfully!';
+      setTimeout(() => router.push('/'), 100);
+    } else {
+      console.error('Login failed:', result.error);
+      form.value!.error = result.error || 'Login failed';
+    }
   } catch (error: any) {
-    console.error('Login failed:', error);
-    form.value!.error = error.response?.data?.message || 'Login failed';
+    console.error('Unexpected login error:', error);
+    form.value!.error = 'An unexpected error occurred';
   }
 }
 
