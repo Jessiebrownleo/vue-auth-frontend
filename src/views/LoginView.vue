@@ -136,10 +136,10 @@ async function handleGoogleLogin(credential: string) {
       setTimeout(() => router.push('/'), 1500);
     } else {
       console.error('Google login failed:', result.error);
-      form.value!.error = result.error;
-      if (result.error.includes('email/password account')) {
+      form.value!.error = result.error ?? 'Google login failed'; // Handle undefined
+      if (result.error?.includes('email/password account')) {
         showGoogleConflict.value = true;
-        googleConflictMessage.value = result.error;
+        googleConflictMessage.value = result.error ?? ''; // Handle undefined
       }
     }
   } catch (error: any) {
@@ -150,7 +150,7 @@ async function handleGoogleLogin(credential: string) {
 
 function usePasswordLogin() {
   showGoogleConflict.value = false;
-  form.value!.error = ''; // Clear error to allow password entry
+  form.value!.error = '';
 }
 
 onMounted(() => {

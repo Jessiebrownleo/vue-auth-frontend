@@ -20,6 +20,12 @@ interface User {
     avatarUrl?: string
 }
 
+// Define return type for auth methods
+interface AuthResult {
+    success: boolean;
+    error?: string;
+}
+
 export const useAuthStore = defineStore('auth', () => {
     const token = ref<string | null>(localStorage.getItem('token') || sessionStorage.getItem('token'))
     const isAuthenticated = ref(!!token.value)
@@ -52,81 +58,123 @@ export const useAuthStore = defineStore('auth', () => {
         })
     }
 
-    async function login(email: string, password: string, rememberMe: boolean = false) {
-        console.log('Login request:', { email, password, rememberMe })
-        const response = await axios.post(`${apiBaseUrl}/login`, { email, password })
-        console.log('Login response:', response.data)
-        token.value = response.data.token
-        user.value = { email: response.data.email, username: response.data.username }
-        if (rememberMe) {
-            localStorage.setItem('token', token.value!)
-        } else {
-            sessionStorage.setItem('token', token.value!)
+    async function login(email: string, password: string, rememberMe: boolean = false): Promise<AuthResult> {
+        try {
+            console.log('Login request:', { email, password, rememberMe });
+            const response = await axios.post(`${apiBaseUrl}/login`, { email, password });
+            console.log('Login response:', response.data);
+            token.value = response.data.token;
+            user.value = { email: response.data.email, username: response.data.username };
+            if (rememberMe) {
+                localStorage.setItem('token', token.value!);
+            } else {
+                sessionStorage.setItem('token', token.value!);
+            }
+            isAuthenticated.value = true;
+            console.log('Store updated:', { token: token.value, user: user.value, isAuthenticated: isAuthenticated.value });
+            return { success: true };
+        } catch (error: any) {
+            console.error('Login failed:', error);
+            const errorMessage = error.response?.data?.message || 'Login failed';
+            return { success: false, error: errorMessage };
         }
-        isAuthenticated.value = true
-        console.log('Store updated:', { token: token.value, user: user.value, isAuthenticated: isAuthenticated.value })
     }
 
-    async function register(username: string, regEmail: string, password: string) {
-        await axios.post(`https://dotnetauthentication-api.soben.me/api/auth/register`, { username, email: regEmail, password })
-        email.value = regEmail
+    async function register(username: string, regEmail: string, password: string): Promise<AuthResult> {
+        try {
+            await axios.post(`${apiBaseUrl}/register`, { username, email: regEmail, password });
+            email.value = regEmail;
+            return { success: true };
+        } catch (error: any) {
+            console.error('Registration failed:', error);
+            const errorMessage = error.response?.data?.message || 'Registration failed';
+            return { success: false, error: errorMessage };
+        }
     }
 
-    async function verifyEmail(email: string, otp: string) {
-        await axios.post(`${apiBaseUrl}/verify-email`, null, { params: { email, otp } })
+    async function verifyEmail(email: string, otp: string): Promise<AuthResult> {
+        try {
+            await axios.post(`${apiBaseUrl}/verify-email`, null, { params: { email, otp } });
+            return { success: true };
+        } catch (error: any) {
+            console.error('Email verification failed:', error);
+            const errorMessage = error.response?.data?.message || 'Email verification failed';
+            return { success: false, error: errorMessage };
+        }
     }
 
-    async function forgotPassword(email: string) {
-        await axios.post(`${apiBaseUrl}/forgot-password`, { email })
+    async function forgotPassword(email: string): Promise<AuthResult> {
+        try {
+            await axios.post(`${apiBaseUrl}/forgot-password`, { email });
+            return { success: true };
+        } catch (error: any) {
+            console.error('Forgot password request failed:', error);
+            const errorMessage = error.response?.data?.message || 'Forgot password request failed';
+            return { success: false, error: errorMessage };
+        }
     }
 
-    async function resetPassword(email: string, token: string, newPassword: string) {
-        await axios.post(`${apiBaseUrl}/reset-password`, { email, token, newPassword })
+    async function resetPassword(email: string, token: string, newPassword: string): Promise<AuthResult> {
+        try {
+            await axios.post(`${apiBaseUrl}/reset-password`, { email, token, newPassword });
+            return { success: true };
+        } catch (error: any) {
+            console.error('Reset password failed:', error);
+            const errorMessage = error.response?.data?.message || 'Reset password failed';
+            return { success: false, error: errorMessage };
+        }
     }
 
-    async function googleLogin(idToken: string) {
-        console.log('Google login request with idToken:', idToken)
-        const response = await axios.post(`${apiBaseUrl}/google-login`, { idToken })
-        console.log('Google login response:', response.data)
-        token.value = response.data.token
-        user.value = { email: response.data.email, username: response.data.username, avatarUrl: response.data.avatarUrl }
-        localStorage.setItem('token', token.value!)
-        isAuthenticated.value = true
-        console.log('Store updated:', { token: token.value, user: user.value, isAuthenticated: isAuthenticated.value })
+    async function googleLogin(idToken: string): Promise<AuthResult> {
+        try {
+            console.log('Google login request with idToken:', idToken);
+            const response = await axios.post(`${apiBaseUrl}/google-login`, { idToken });
+            console.log('Google login response:', response.data);
+            token.value = response.data.token;
+            user.value = { email: response.data.email, username: response.data.username, avatarUrl: response.data.avatarUrl };
+            localStorage.setItem('token', token.value!);
+            isAuthenticated.value = true;
+            console.log('Store updated:', { token: token.value, user: user.value, isAuthenticated: isAuthenticated.value });
+            return { success: true };
+        } catch (error: any) {
+            console.error('Google login failed:', error);
+            const errorMessage = error.response?.data?.message || 'Google login failed';
+            return { success: false, error: errorMessage };
+        }
     }
 
     async function initGoogleAuth(onSuccess: (credential: string) => void) {
-        await waitForGoogleScript()
-        const win = window as GoogleWindow
+        await waitForGoogleScript();
+        const win = window as GoogleWindow;
         if (win.google && googleScriptLoaded.value) {
-            console.log('Initializing Google Auth...')
+            console.log('Initializing Google Auth...');
             win.google.accounts.id.initialize({
                 client_id: googleClientId,
                 callback: (response: { credential: string }) => {
-                    console.log('Google callback triggered')
-                    onSuccess(response.credential)
+                    console.log('Google callback triggered');
+                    onSuccess(response.credential);
                 },
-            })
-            const buttonElement = document.getElementById('google-signin-button')
+            });
+            const buttonElement = document.getElementById('google-signin-button');
             if (buttonElement) {
-                win.google.accounts.id.renderButton(buttonElement, { theme: 'outline', size: 'large' })
-                console.log('Google button rendered')
+                win.google.accounts.id.renderButton(buttonElement, { theme: 'outline', size: 'large' });
+                console.log('Google button rendered');
             } else {
-                console.error('Google Sign-In button element not found')
+                console.error('Google Sign-In button element not found');
             }
         } else {
-            console.error('Google Identity Services script not loaded after wait')
+            console.error('Google Identity Services script not loaded after wait');
         }
     }
 
     function logout() {
-        token.value = null
-        localStorage.removeItem('token')
-        sessionStorage.removeItem('token')
-        isAuthenticated.value = false
-        email.value = null
-        user.value = null
-        console.log('Logged out, store reset')
+        token.value = null;
+        localStorage.removeItem('token');
+        sessionStorage.removeItem('token');
+        isAuthenticated.value = false;
+        email.value = null;
+        user.value = null;
+        console.log('Logged out, store reset');
     }
 
     return { token, isAuthenticated, email, user, login, register, verifyEmail, forgotPassword, resetPassword, googleLogin, initGoogleAuth, logout }

@@ -145,10 +145,10 @@ async function handleRegister() {
       setTimeout(() => router.push('/verify-email'), 1500);
     } else {
       console.error('Registration failed:', result.error);
-      form.value!.error = result.error;
-      if (result.error.includes('Email already in use')) {
+      form.value!.error = result.error ?? 'Registration failed'; // Handle undefined
+      if (result.error?.includes('Email already in use')) {
         showEmailDuplicate.value = true;
-        emailDuplicateMessage.value = 'This email is already registered. You can log in or reset your password.';
+        emailDuplicateMessage.value = result.error ?? ''; // Handle undefined
       }
     }
   } catch (error: any) {
@@ -156,7 +156,7 @@ async function handleRegister() {
     form.value!.error = error.response?.data?.message || 'Registration failed';
     if (error.response?.data?.message.includes('Email already in use')) {
       showEmailDuplicate.value = true;
-      emailDuplicateMessage.value = 'This email is already registered. You can log in or reset your password.';
+      emailDuplicateMessage.value = error.response.data.message;
     }
   } finally {
     isSubmitting.value = false;
