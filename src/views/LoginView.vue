@@ -39,10 +39,8 @@
               v-model="rememberMe"
               type="checkbox"
               class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-          >
-          <label for="remember-me" class="ml-2 block text-sm text-gray-900">
-            Remember me
-          </label>
+          />
+          <label for="remember-me" class="ml-2 block text-sm text-gray-900">Remember me</label>
         </div>
         <router-link to="/forgot-password" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">
           Forgot your password?
@@ -59,13 +57,19 @@
       <div class="mt-6">
         <div id="google-signin-button" class="flex justify-center"></div>
       </div>
+      <!-- Additional UI for Google login conflict -->
+      <div v-if="showGoogleConflict" class="mt-4 text-sm text-gray-600 text-center">
+        <p>{{ googleConflictMessage }}</p>
+        <div class="mt-2 flex justify-center space-x-4">
+          <button @click="usePasswordLogin" class="text-indigo-600 hover:text-indigo-500 font-medium">Use Password</button>
+          <router-link to="/link-google" class="text-indigo-600 hover:text-indigo-500 font-medium">Link Account</router-link>
+        </div>
+      </div>
     </div>
   </AuthForm>
   <p class="mt-4 text-center text-sm text-gray-600">
     Not a member?
-    <router-link to="/register" class="font-medium text-indigo-600 hover:text-indigo-500">
-      Sign up now
-    </router-link>
+    <router-link to="/register" class="font-medium text-indigo-600 hover:text-indigo-500">Sign up now</router-link>
   </p>
 </template>
 
@@ -82,59 +86,75 @@ const rememberMe = ref(false)
 const router = useRouter()
 const authStore = useAuthStore()
 const form = ref<InstanceType<typeof AuthForm> | null>(null)
-
 const emailError = ref('')
+const showGoogleConflict = ref(false)
+const googleConflictMessage = ref('')
 
 const isFormValid = computed(() => {
   return email.value && password.value && !emailError.value
 })
 
 function validateEmail() {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email.value)) {
-    emailError.value = 'Please enter a valid email address'
+    emailError.value = 'Please enter a valid email address';
   } else {
-    emailError.value = ''
+    emailError.value = '';
   }
 }
 
 function togglePasswordVisibility() {
-  showPassword.value = !showPassword.value
+  showPassword.value = !showPassword.value;
 }
 
 async function handleLogin() {
   if (!isFormValid.value) {
-    form.value!.error = 'Please fill in all fields correctly'
-    return
+    form.value!.error = 'Please fill in all fields correctly';
+    return;
   }
 
   try {
-    console.log('Starting login process...')
-    await authStore.login(email.value, password.value, rememberMe.value)
-    console.log('Login successful!')
-    form.value!.message = 'Logged in successfully!'
-    router.push('/')
+    console.log('Starting login process...');
+    await authStore.login(email.value, password.value, rememberMe.value);
+    console.log('Login successful!');
+    form.value!.message = 'Logged in successfully!';
+    setTimeout(() => router.push('/'), 1500);
   } catch (error: any) {
-    console.error('Login failed:', error)
-    form.value!.error = error.response?.data?.message || 'Login failed'
+    console.error('Login failed:', error);
+    form.value!.error = error.response?.data?.message || 'Login failed';
   }
 }
 
 async function handleGoogleLogin(credential: string) {
   try {
-    console.log('Starting Google login process...')
-    await authStore.googleLogin(credential)
-    console.log('Google login successful!')
-    form.value!.message = 'Logged in with Google successfully!'
-    router.push('/')
+    console.log('Starting Google login process...');
+    const result = await authStore.googleLogin(credential);
+    if (result.success) {
+      console.log('Google login successful!');
+      form.value!.message = 'Logged in with Google successfully!';
+      showGoogleConflict.value = false;
+      setTimeout(() => router.push('/'), 1500);
+    } else {
+      console.error('Google login failed:', result.error);
+      form.value!.error = result.error;
+      if (result.error.includes('email/password account')) {
+        showGoogleConflict.value = true;
+        googleConflictMessage.value = result.error;
+      }
+    }
   } catch (error: any) {
-    console.error('Google login failed:', error)
-    form.value!.error = error.response?.data?.message || 'Google login failed'
+    console.error('Google login failed:', error);
+    form.value!.error = error.response?.data?.message || 'Google login failed';
   }
 }
 
+function usePasswordLogin() {
+  showGoogleConflict.value = false;
+  form.value!.error = ''; // Clear error to allow password entry
+}
+
 onMounted(() => {
-  console.log('Initializing Google Auth...')
-  authStore.initGoogleAuth(handleGoogleLogin)
-})
+  console.log('Initializing Google Auth...');
+  authStore.initGoogleAuth(handleGoogleLogin);
+});
 </script>

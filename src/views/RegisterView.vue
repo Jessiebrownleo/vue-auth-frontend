@@ -57,6 +57,15 @@
           I agree to the <a href="#" class="text-indigo-600 hover:text-indigo-500">Terms and Conditions</a>
         </label>
       </div>
+
+      <!-- Duplicate email feedback -->
+      <div v-if="showEmailDuplicate" class="mt-4 text-sm text-gray-600 text-center">
+        <p>{{ emailDuplicateMessage }}</p>
+        <div class="mt-2 flex justify-center space-x-4">
+          <router-link to="/login" class="text-indigo-600 hover:text-indigo-500 font-medium">Log In Instead</router-link>
+          <router-link to="/forgot-password" class="text-indigo-600 hover:text-indigo-500 font-medium">Reset Password</router-link>
+        </div>
+      </div>
     </div>
   </AuthForm>
 </template>
@@ -80,6 +89,8 @@ const form = ref<InstanceType<typeof AuthForm> | null>(null)
 const usernameError = ref('')
 const emailError = ref('')
 const passwordError = ref('')
+const showEmailDuplicate = ref(false)
+const emailDuplicateMessage = ref('')
 
 const isFormValid = computed(() => {
   return username.value && email.value && password.value && agreeToTerms.value &&
@@ -89,52 +100,66 @@ const isFormValid = computed(() => {
 // Validate username
 watch(username, (value) => {
   if (value.length < 3) {
-    usernameError.value = 'Username must be at least 3 characters long'
+    usernameError.value = 'Username must be at least 3 characters long';
   } else {
-    usernameError.value = ''
+    usernameError.value = '';
   }
 })
 
 // Validate email
 watch(email, (value) => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  emailError.value = emailRegex.test(value) ? '' : 'Please enter a valid email address'
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  emailError.value = emailRegex.test(value) ? '' : 'Please enter a valid email address';
 })
 
 // Validate password
 watch(password, (value) => {
   if (value.length < 8) {
-    passwordError.value = 'Password must be at least 8 characters long'
+    passwordError.value = 'Password must be at least 8 characters long';
   } else if (!/[A-Z]/.test(value) || !/[a-z]/.test(value) || !/[0-9]/.test(value)) {
-    passwordError.value = 'Password must contain at least one uppercase letter, one lowercase letter, and one number'
+    passwordError.value = 'Password must contain at least one uppercase letter, one lowercase letter, and one number';
   } else {
-    passwordError.value = ''
+    passwordError.value = '';
   }
 })
 
 function togglePasswordVisibility() {
-  showPassword.value = !showPassword.value
+  showPassword.value = !showPassword.value;
 }
 
 async function handleRegister() {
   if (!isFormValid.value) {
-    form.value!.error = 'Please fill in all fields correctly and agree to the terms'
-    return
+    form.value!.error = 'Please fill in all fields correctly and agree to the terms';
+    return;
   }
 
-  isSubmitting.value = true
+  isSubmitting.value = true;
 
   try {
-    console.log('Starting registration...')
-    await authStore.register(username.value, email.value, password.value)
-    console.log('Registration successful!')
-    form.value!.message = 'Registration successful! Redirecting to verify your email...'
-    router.push('/verify-email')
+    console.log('Starting registration...');
+    const result = await authStore.register(username.value, email.value, password.value);
+    if (result.success) {
+      console.log('Registration successful!');
+      form.value!.message = 'Registration successful! Redirecting to verify your email...';
+      showEmailDuplicate.value = false;
+      setTimeout(() => router.push('/verify-email'), 1500);
+    } else {
+      console.error('Registration failed:', result.error);
+      form.value!.error = result.error;
+      if (result.error.includes('Email already in use')) {
+        showEmailDuplicate.value = true;
+        emailDuplicateMessage.value = 'This email is already registered. You can log in or reset your password.';
+      }
+    }
   } catch (error: any) {
-    console.error('Registration failed:', error)
-    form.value!.error = error.response?.data?.message || 'Registration failed'
+    console.error('Registration failed:', error);
+    form.value!.error = error.response?.data?.message || 'Registration failed';
+    if (error.response?.data?.message.includes('Email already in use')) {
+      showEmailDuplicate.value = true;
+      emailDuplicateMessage.value = 'This email is already registered. You can log in or reset your password.';
+    }
   } finally {
-    isSubmitting.value = false
+    isSubmitting.value = false;
   }
 }
 </script>
