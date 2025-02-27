@@ -82,11 +82,13 @@ export const useAuthStore = defineStore('auth', () => {
 
     async function register(username: string, regEmail: string, password: string): Promise<AuthResult> {
         try {
-            await axios.post(`${apiBaseUrl}/register`, { username, email: regEmail, password });
+            console.log('Register request:', { username, email: regEmail, password });
+            const response = await axios.post(`${apiBaseUrl}/register`, { username, email: regEmail, password });
+            console.log('Register response:', response.data);
             email.value = regEmail;
             return { success: true };
         } catch (error: any) {
-            console.error('Registration failed:', error);
+            console.error('Register error:', error.response ? error.response.data : error.message);
             const errorMessage = error.response?.data?.message || 'Registration failed';
             return { success: false, error: errorMessage };
         }
@@ -137,7 +139,7 @@ export const useAuthStore = defineStore('auth', () => {
             console.log('Store updated:', { token: token.value, user: user.value, isAuthenticated: isAuthenticated.value });
             return { success: true };
         } catch (error: any) {
-            console.error('Google login failed:', error);
+            console.error('Google login error:', error.response ? error.response.data : error.message);
             const errorMessage = error.response?.data?.message || 'Google login failed';
             return { success: false, error: errorMessage };
         }
