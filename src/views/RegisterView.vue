@@ -57,15 +57,6 @@
           I agree to the <a href="#" class="text-indigo-600 hover:text-indigo-500">Terms and Conditions</a>
         </label>
       </div>
-
-      <!-- Duplicate email feedback -->
-      <div v-if="showEmailDuplicate" class="mt-4 text-sm text-gray-600 text-center">
-        <p>{{ emailDuplicateMessage }}</p>
-        <div class="mt-2 flex justify-center space-x-4">
-          <router-link to="/login" class="text-indigo-600 hover:text-indigo-500 font-medium">Log In Instead</router-link>
-          <router-link to="/forgot-password" class="text-indigo-600 hover:text-indigo-500 font-medium">Reset Password</router-link>
-        </div>
-      </div>
     </div>
   </AuthForm>
 </template>
@@ -89,8 +80,6 @@ const form = ref<InstanceType<typeof AuthForm> | null>(null)
 const usernameError = ref('')
 const emailError = ref('')
 const passwordError = ref('')
-const showEmailDuplicate = ref(false)
-const emailDuplicateMessage = ref('')
 
 const isFormValid = computed(() => {
   return username.value && email.value && password.value && agreeToTerms.value &&
@@ -141,23 +130,14 @@ async function handleRegister() {
     if (result.success) {
       console.log('Registration successful!');
       form.value!.message = 'Registration successful! Redirecting to verify your email...';
-      showEmailDuplicate.value = false;
       setTimeout(() => router.push('/verify-email'), 1500);
     } else {
       console.error('Registration failed:', result.error);
-      form.value!.error = result.error ?? 'Registration failed'; // Handle undefined
-      if (result.error?.includes('Email already in use')) {
-        showEmailDuplicate.value = true;
-        emailDuplicateMessage.value = result.error ?? ''; // Handle undefined
-      }
+      form.value!.error = result.error ?? 'Registration failed';
     }
   } catch (error: any) {
     console.error('Registration failed:', error);
     form.value!.error = error.response?.data?.message || 'Registration failed';
-    if (error.response?.data?.message.includes('Email already in use')) {
-      showEmailDuplicate.value = true;
-      emailDuplicateMessage.value = error.response.data.message;
-    }
   } finally {
     isSubmitting.value = false;
   }
