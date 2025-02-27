@@ -1,6 +1,7 @@
 <template>
   <AuthForm title="Welcome Back" buttonText="Sign In" :submit="handleLogin" ref="form">
     <div class="space-y-4">
+      <Loading :active="isLoading" :can-cancel="false" :is-full-page="true" />
       <div>
         <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
         <input
@@ -70,7 +71,8 @@ import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import AuthForm from '../components/AuthForm.vue'
-
+import Loading from 'vue-loading-overlay'
+import 'vue-loading-overlay/dist/css/index.css'
 const email = ref('')
 const password = ref('')
 const showPassword = ref(false)
@@ -79,7 +81,7 @@ const router = useRouter()
 const authStore = useAuthStore()
 const form = ref<InstanceType<typeof AuthForm> | null>(null)
 const emailError = ref('')
-
+const isLoading = ref(false)
 const isFormValid = computed(() => {
   return email.value && password.value && !emailError.value
 })
@@ -102,7 +104,7 @@ async function handleLogin() {
     form.value!.error = 'Please fill in all fields correctly';
     return;
   }
-
+  isLoading.value = true;
   try {
     console.log('Starting login process...');
     const result = await authStore.login(email.value, password.value, rememberMe.value);
@@ -118,10 +120,14 @@ async function handleLogin() {
   } catch (error: any) {
     console.error('Unexpected login error:', error);
     form.value!.error = 'An unexpected error occurred';
+  }finally {
+    isLoading.value = false; // Hide loading
   }
+
 }
 
 async function handleGoogleLogin(credential: string) {
+  isLoading.value = true;
   try {
     console.log('Starting Google login process...');
     const result = await authStore.googleLogin(credential);
@@ -136,6 +142,8 @@ async function handleGoogleLogin(credential: string) {
   } catch (error: any) {
     console.error('Google login failed:', error);
     form.value!.error = error.response?.data?.message || 'Google login failed';
+  }finally {
+    isLoading.value = false;
   }
 }
 

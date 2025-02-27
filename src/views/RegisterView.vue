@@ -1,6 +1,7 @@
 <template>
   <AuthForm title="Create an Account" buttonText="Sign Up" :submit="handleRegister" ref="form">
     <div class="space-y-4">
+      <Loading :active="isLoading" :can-cancel="false" :is-full-page="true" />
       <div>
         <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
         <input
@@ -66,6 +67,8 @@ import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import AuthForm from '../components/AuthForm.vue'
+import Loading from 'vue-loading-overlay'
+import 'vue-loading-overlay/dist/css/index.css'
 
 const username = ref('')
 const email = ref('')
@@ -76,7 +79,7 @@ const isSubmitting = ref(false)
 const router = useRouter()
 const authStore = useAuthStore()
 const form = ref<InstanceType<typeof AuthForm> | null>(null)
-
+const isLoading = ref(false)
 const usernameError = ref('')
 const emailError = ref('')
 const passwordError = ref('')
@@ -121,7 +124,7 @@ async function handleRegister() {
     form.value!.error = 'Please fill in all fields correctly and agree to the terms';
     return;
   }
-
+  isLoading.value = true
   isSubmitting.value = true;
 
   try {
@@ -139,6 +142,7 @@ async function handleRegister() {
     console.error('Registration failed:', error);
     form.value!.error = error.response?.data?.message || 'Registration failed';
   } finally {
+    isLoading.value = false
     isSubmitting.value = false;
   }
 }
