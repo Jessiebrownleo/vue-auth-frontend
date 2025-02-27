@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8101:80"
+    networks:
+      - soben-network
+
+networks:
+  soben-network:
+    driver: bridge
