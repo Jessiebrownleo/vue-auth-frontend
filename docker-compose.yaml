@@ -2,8 +2,9 @@ version: '3.8'
 
 services:
   frontend:
+    container_name: dotnetauth-frontend
     build:
-      context: .
+      context: ./
       dockerfile: Dockerfile
     ports:
       - "8101:80"
@@ -12,4 +13,4 @@ services:
 
 networks:
   soben-network:
-    driver: bridge
+    external: true
