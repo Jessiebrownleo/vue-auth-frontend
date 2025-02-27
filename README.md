@@ -1,5 +1,35 @@
-# Vue 3 + TypeScript + Vite
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+---
 
-Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
+### `vue-auth-frontend/README.md` (Frontend)
+
+```markdown
+# DotnetAuthentication UI
+
+This is a Vue 3 + Vite + TypeScript frontend for the DotnetAuthentication API, providing a user interface for registration, login, email verification, password reset, and Google OAuth login. It’s designed for deployment at `https://dotnetauthentication-ui.soben.me` and integrates with the backend at `https://dotnetauthentication-api.soben.me`.
+
+## Overview
+
+- **Purpose**: A responsive, single-page application for authentication using the DotnetAuthentication API.
+- **Technology Stack**:
+  - Vue 3
+  - Vite
+  - TypeScript
+  - Tailwind CSS
+  - Pinia for state management
+  - Docker for containerization
+
+## Prerequisites
+
+- [Node.js](https://nodejs.org/) (v18 or higher)
+- [npm](https://www.npmjs.com/)
+- [Docker](https://www.docker.com/get-started) (for containerized deployment)
+
+## Installation
+
+### Local Development
+
+1. **Clone the Repository**:
+   ```bash
+   git clone <your-repo-url>
+   cd vue-auth-frontend
