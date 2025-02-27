@@ -57,14 +57,6 @@
       <div class="mt-6">
         <div id="google-signin-button" class="flex justify-center"></div>
       </div>
-      <!-- Additional UI for Google login conflict -->
-      <div v-if="showGoogleConflict" class="mt-4 text-sm text-gray-600 text-center">
-        <p>{{ googleConflictMessage }}</p>
-        <div class="mt-2 flex justify-center space-x-4">
-          <button @click="usePasswordLogin" class="text-indigo-600 hover:text-indigo-500 font-medium">Use Password</button>
-          <router-link to="/link-google" class="text-indigo-600 hover:text-indigo-500 font-medium">Link Account</router-link>
-        </div>
-      </div>
     </div>
   </AuthForm>
   <p class="mt-4 text-center text-sm text-gray-600">
@@ -87,8 +79,6 @@ const router = useRouter()
 const authStore = useAuthStore()
 const form = ref<InstanceType<typeof AuthForm> | null>(null)
 const emailError = ref('')
-const showGoogleConflict = ref(false)
-const googleConflictMessage = ref('')
 
 const isFormValid = computed(() => {
   return email.value && password.value && !emailError.value
@@ -132,25 +122,15 @@ async function handleGoogleLogin(credential: string) {
     if (result.success) {
       console.log('Google login successful!');
       form.value!.message = 'Logged in with Google successfully!';
-      showGoogleConflict.value = false;
       setTimeout(() => router.push('/'), 1500);
     } else {
       console.error('Google login failed:', result.error);
-      form.value!.error = result.error ?? 'Google login failed'; // Handle undefined
-      if (result.error?.includes('email/password account')) {
-        showGoogleConflict.value = true;
-        googleConflictMessage.value = result.error ?? ''; // Handle undefined
-      }
+      form.value!.error = result.error ?? 'Google login failed';
     }
   } catch (error: any) {
     console.error('Google login failed:', error);
     form.value!.error = error.response?.data?.message || 'Google login failed';
   }
-}
-
-function usePasswordLogin() {
-  showGoogleConflict.value = false;
-  form.value!.error = '';
 }
 
 onMounted(() => {
