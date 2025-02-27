@@ -68,7 +68,7 @@ export const useAuthStore = defineStore('auth', () => {
     }
 
     async function register(username: string, regEmail: string, password: string) {
-        await axios.post(`${apiBaseUrl}/register`, { username, email: regEmail, password })
+        await axios.post(`https://dotnetauthentication-api.soben.me/api/auth/register`, { username, email: regEmail, password })
         email.value = regEmail
     }
 
