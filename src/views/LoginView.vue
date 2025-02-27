@@ -28,7 +28,7 @@
               class="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5 text-gray-500 hover:text-gray-700"
               @click="togglePasswordVisibility"
           >
-            {{ showPassword ? 'Hide' : 'Show' }}
+            {{ showPassword ? '🙈' : '👁️' }}
           </button>
         </div>
       </div>
